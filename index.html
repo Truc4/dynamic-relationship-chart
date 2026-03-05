@@ -9,15 +9,23 @@
     <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.29.0/dist/cytoscape.min.js"></script>
 
     <!-- COSE-Bilkent Layout Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/dist/cytoscape-cose-bilkent.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/dist/cytoscape-cose-bilkent.umd.js"></script>
 
     <script>
       // Register COSE-Bilkent layout after both scripts load
-      // The cose-bilkent UMD bundle auto-registers if Cytoscape is available
-      // Verify it's available and debug if needed
       if (typeof cytoscape !== 'undefined') {
-        // List registered layouts for debugging
-        console.log('Available layouts:', Object.keys(cytoscape.layoutUtilities?.defaults?.all || {}));
+        // Try multiple possible export names for the COSE-Bilkent plugin
+        const coseBilkentModule = window.coseBilkent || window.CoseBilkent || window['cytoscape-cose-bilkent'];
+
+        if (coseBilkentModule) {
+          console.log('Registering COSE-Bilkent layout...');
+          cytoscape.use(coseBilkentModule);
+          console.log('✓ COSE-Bilkent registered');
+        } else {
+          console.warn('COSE-Bilkent library not available from CDN, using standard COSE layout');
+        }
+      } else {
+        console.error('Cytoscape failed to load from CDN');
       }
     </script>
 
@@ -39,6 +47,7 @@
                 <h3>Load Data</h3>
                 <label for="dataFileInput">Select JSON file:</label>
                 <input type="file" id="dataFileInput" accept=".json" title="Load a relationships.json file">
+                <button id="downloadJsonBtn">Download JSON</button>
             </div>
 
             <!-- Search -->
@@ -51,6 +60,16 @@
             <div class="section">
                 <h3>Groups</h3>
                 <div id="groupFilterContainer"></div>
+            </div>
+
+            <!-- Edit Relationships -->
+            <div class="section">
+                <h3>Edit Relationships</h3>
+                <label>From: <select id="relSourceSelect"></select></label>
+                <label>To: <select id="relTargetSelect"></select></label>
+                <label>Type: <select id="relTypeSelect"></select></label>
+                <input type="text" id="relLabelInput" placeholder="Label (optional)">
+                <button id="addRelationshipBtn">Add Relationship</button>
             </div>
 
             <!-- Layout Controls -->

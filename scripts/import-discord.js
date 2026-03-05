@@ -10,8 +10,31 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const GUILD_ID = process.env.GUILD_ID;
-const DATA_FILE = path.join(__dirname, '..', 'data', 'relationships.json');
 const API_BASE = 'https://discord.com/api/v10';
+
+/**
+ * Fetch guild info to get the server name
+ */
+async function fetchGuildInfo() {
+  if (!DISCORD_TOKEN || !GUILD_ID) {
+    throw new Error('DISCORD_TOKEN and GUILD_ID must be set in .env file');
+  }
+
+  const response = await fetch(`${API_BASE}/guilds/${GUILD_ID}`, {
+    headers: {
+      Authorization: `Bot ${DISCORD_TOKEN}`,
+      'User-Agent': 'DynamicRelationshipChart/1.0'
+    }
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Discord API error ${response.status}: ${error}`);
+  }
+
+  const guild = await response.json();
+  return guild;
+}
 
 /**
  * Fetch all members from a Discord guild
@@ -56,11 +79,11 @@ async function fetchGuildMembers() {
 }
 
 /**
- * Get avatar URL from Discord member
+ * Get avatar URL from Discord member (user profile, not server profile)
  */
 function getAvatarUrl(member) {
   const userId = member.user.id;
-  const avatarHash = member.avatar || member.user.avatar;
+  const avatarHash = member.user.avatar;
 
   if (!avatarHash) {
     // Default Discord avatar based on discriminator
@@ -73,14 +96,14 @@ function getAvatarUrl(member) {
 }
 
 /**
- * Transform Discord members to people array
+ * Transform Discord members to people array (use user profile, not server profile)
  */
 function transformMembers(members) {
   return members
     .filter(m => !m.user.bot) // Exclude bots
     .map(m => ({
       id: m.user.id,
-      name: m.nick || m.user.username,
+      name: m.user.username,
       image: getAvatarUrl(m),
       group: 'discord',
       bio: ''
@@ -90,9 +113,9 @@ function transformMembers(members) {
 /**
  * Merge with existing data
  */
-function mergeWithExisting(people) {
+function mergeWithExisting(people, dataFile, guildName) {
   try {
-    const existing = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
+    const existing = JSON.parse(fs.readFileSync(dataFile, 'utf-8'));
 
     // Keep existing relationships
     const existingIds = new Set(existing.people.map(p => p.id));
@@ -104,9 +127,9 @@ function mergeWithExisting(people) {
     };
   } catch (error) {
     // File doesn't exist or is invalid, create new
-    console.log('Creating new relationships.json...');
+    console.log(`Creating new ${path.basename(dataFile)}...`);
     return {
-      metadata: { title: 'Discord Guild Network' },
+      metadata: { title: guildName },
       people,
       relationships: [],
       relationshipTypes: [
@@ -124,10 +147,27 @@ function mergeWithExisting(people) {
 }
 
 /**
+ * Sanitize guild name for filename
+ */
+function sanitizeFilename(name) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
  * Main import function
  */
 async function main() {
   try {
+    console.log('🔄 Fetching Discord guild info...');
+    const guild = await fetchGuildInfo();
+    console.log(`✓ Guild: ${guild.name}`);
+
+    const sanitizedName = sanitizeFilename(guild.name);
+    const dataFile = path.join(__dirname, '..', 'data', `${sanitizedName}.json`);
+
     console.log('🔄 Fetching Discord guild members...');
     const members = await fetchGuildMembers();
     console.log(`✓ Fetched ${members.length} members`);
@@ -137,17 +177,18 @@ async function main() {
     console.log(`✓ ${people.length} members (bots excluded)`);
 
     console.log('🔄 Merging with existing data...');
-    const data = mergeWithExisting(people);
+    const data = mergeWithExisting(people, dataFile, guild.name);
 
-    console.log('🔄 Writing relationships.json...');
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-    console.log(`✓ Saved to ${DATA_FILE}`);
+    console.log(`🔄 Writing ${path.basename(dataFile)}...`);
+    fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
+    console.log(`✓ Saved to ${dataFile}`);
 
     console.log('\n✅ Import complete!');
     console.log('Next steps:');
     console.log('  1. Open index.html in a browser');
     console.log('  2. Use "npx serve ." to run a local server');
-    console.log('  3. Add relationships manually in the sidebar or edit relationships.json');
+    console.log('  3. Load your guild data via the "Load Data" section');
+    console.log('  4. Add relationships manually in the sidebar');
   } catch (error) {
     console.error('❌ Error:', error.message);
     process.exit(1);

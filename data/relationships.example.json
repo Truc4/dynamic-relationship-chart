@@ -22,21 +22,21 @@
       "name": "Carol Smith",
       "image": "",
       "group": "family",
-      "bio": "Alice and Bob's daughter"
+      "bio": "Alice's sibling, doctor"
     },
     {
       "id": "david",
       "name": "David Chen",
       "image": "",
       "group": "family",
-      "bio": "Carol's spouse, doctor"
+      "bio": "Carol's dating partner"
     },
     {
       "id": "emma",
       "name": "Emma Smith",
       "image": "",
       "group": "family",
-      "bio": "Alice and Bob's granddaughter"
+      "bio": "Alice and Bob's family"
     },
     {
       "id": "frank",
@@ -49,15 +49,15 @@
       "id": "grace",
       "name": "Grace Lee",
       "image": "",
-      "group": "friends",
-      "bio": "Carol's work colleague and friend"
+      "group": "work",
+      "bio": "Bob's coworker"
     },
     {
       "id": "henry",
       "name": "Henry Martinez",
       "image": "",
-      "group": "friends",
-      "bio": "Bob's college roommate"
+      "group": "work",
+      "bio": "Bob's manager"
     },
     {
       "id": "iris",
@@ -77,32 +77,20 @@
     {
       "source": "alice",
       "target": "carol",
-      "type": "ParentChild",
-      "label": "Mother"
-    },
-    {
-      "source": "bob",
-      "target": "carol",
-      "type": "ParentChild",
-      "label": "Father"
+      "type": "Siblings",
+      "label": "Brother and sister"
     },
     {
       "source": "carol",
       "target": "david",
-      "type": "Married",
-      "label": "Married 2012"
+      "type": "Dating",
+      "label": "Dating 2 years"
     },
     {
-      "source": "carol",
-      "target": "emma",
-      "type": "ParentChild",
-      "label": "Mother"
-    },
-    {
-      "source": "david",
-      "target": "emma",
-      "type": "ParentChild",
-      "label": "Father"
+      "source": "bob",
+      "target": "iris",
+      "type": "Cousins",
+      "label": "First cousins"
     },
     {
       "source": "alice",
@@ -111,29 +99,23 @@
       "label": "Since 1965"
     },
     {
-      "source": "carol",
+      "source": "bob",
       "target": "grace",
-      "type": "Friends",
-      "label": "Work friends"
+      "type": "Coworker",
+      "label": "Engineering team"
     },
     {
-      "source": "bob",
-      "target": "henry",
-      "type": "Friends",
-      "label": "College roommates"
-    },
-    {
-      "source": "bob",
-      "target": "iris",
-      "type": "Cousins",
-      "label": "First cousins"
+      "source": "henry",
+      "target": "bob",
+      "type": "Subordinate",
+      "label": "Direct reports"
     }
   ],
   "relationshipTypes": [
     {
-      "type": "Married",
-      "color": "#e74c3c",
-      "width": 3
+      "type": "Cousins",
+      "color": "#9b59b6",
+      "width": 2
     },
     {
       "type": "Siblings",
@@ -141,18 +123,28 @@
       "width": 2
     },
     {
-      "type": "Cousins",
-      "color": "#9b59b6",
+      "type": "Friends",
+      "color": "#f39c12",
+      "width": 1
+    },
+    {
+      "type": "Dating",
+      "color": "#e91e63",
       "width": 2
     },
     {
-      "type": "ParentChild",
+      "type": "Married",
+      "color": "#e74c3c",
+      "width": 3
+    },
+    {
+      "type": "Subordinate",
       "color": "#2ecc71",
       "width": 2
     },
     {
-      "type": "Friends",
-      "color": "#f39c12",
+      "type": "Coworker",
+      "color": "#00bcd4",
       "width": 1
     }
   ],
@@ -165,12 +157,17 @@
     {
       "id": "friends",
       "label": "Friends",
+      "nodeColor": "#fce4d6"
+    },
+    {
+      "id": "work",
+      "label": "Work",
       "nodeColor": "#dae8fc"
     },
     {
       "id": "extended",
       "label": "Extended",
-      "nodeColor": "#fce4d6"
+      "nodeColor": "#f8cecc"
     }
   ]
 }

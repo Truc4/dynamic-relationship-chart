@@ -17,6 +17,16 @@ async function initializeApp() {
     }
     console.log('✓ Cytoscape.js loaded');
 
+    // Check if COSE-Bilkent is available
+    try {
+      const testCy = cytoscape({ headless: true });
+      testCy.layout({ name: 'cose-bilkent' });
+      console.log('✓ COSE-Bilkent layout available');
+      testCy.destroy();
+    } catch (e) {
+      console.warn('⚠ COSE-Bilkent layout not available, will use fallback:', e.message);
+    }
+
     // Initialize data loader
     dataLoader = new DataLoader();
 

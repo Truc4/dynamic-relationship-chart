@@ -69,7 +69,8 @@ body {
 
 /* Input elements */
 input[type="text"],
-input[type="file"] {
+input[type="file"],
+select {
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
@@ -80,7 +81,8 @@ input[type="file"] {
 }
 
 input[type="text"]:focus,
-input[type="file"]:focus {
+input[type="file"]:focus,
+select:focus {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 4px rgba(52, 152, 219, 0.3);
@@ -190,6 +192,35 @@ button:last-child {
   line-height: 1.5;
   margin: 8px 0;
   color: #555;
+}
+
+.relationship-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 12px;
+  color: #555;
+  border-bottom: 1px solid #eee;
+}
+
+.relationship-item:last-child {
+  border-bottom: none;
+}
+
+.delete-rel-btn {
+  width: auto;
+  padding: 4px 8px;
+  margin: 0;
+  margin-left: 8px;
+  background: #e74c3c;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.delete-rel-btn:hover {
+  background: #c0392b;
 }
 
 /* Canvas */

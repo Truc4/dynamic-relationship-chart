@@ -20,6 +20,9 @@ class Sidebar {
     // Group filter
     this.populateGroupFilters();
 
+    // Relationship form
+    this.populateRelationshipForm();
+
     // Layout controls
     const relayoutBtn = document.getElementById('relayoutBtn');
     relayoutBtn.addEventListener('click', () => this.onRelayout());
@@ -45,6 +48,14 @@ class Sidebar {
     const dataFileInput = document.getElementById('dataFileInput');
     dataFileInput.addEventListener('change', (e) => this.onDataFileSelected(e));
 
+    // Download JSON
+    const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+    downloadJsonBtn.addEventListener('click', () => this.downloadJSON());
+
+    // Add relationship
+    const addRelationshipBtn = document.getElementById('addRelationshipBtn');
+    addRelationshipBtn.addEventListener('click', () => this.addRelationship());
+
     // Set node click handler
     this.renderer.onNodeClick = (node) => this.showNodeInfo(node);
   }
@@ -69,6 +80,44 @@ class Sidebar {
       container.appendChild(label);
 
       this.selectedGroups.add(group.id);
+    });
+  }
+
+  /**
+   * Populate relationship form dropdowns
+   */
+  populateRelationshipForm() {
+    const sourceSelect = document.getElementById('relSourceSelect');
+    const targetSelect = document.getElementById('relTargetSelect');
+    const typeSelect = document.getElementById('relTypeSelect');
+
+    // Clear existing options
+    sourceSelect.innerHTML = '<option value="">-- Select source --</option>';
+    targetSelect.innerHTML = '<option value="">-- Select target --</option>';
+    typeSelect.innerHTML = '<option value="">-- Select type --</option>';
+
+    // Sort people by name
+    const sortedPeople = [...this.data.people].sort((a, b) => a.name.localeCompare(b.name));
+
+    // Populate source and target with people
+    sortedPeople.forEach(person => {
+      const sourceOpt = document.createElement('option');
+      sourceOpt.value = person.id;
+      sourceOpt.textContent = person.name;
+      sourceSelect.appendChild(sourceOpt);
+
+      const targetOpt = document.createElement('option');
+      targetOpt.value = person.id;
+      targetOpt.textContent = person.name;
+      targetSelect.appendChild(targetOpt);
+    });
+
+    // Populate type dropdown
+    this.data.relationshipTypes.forEach(relType => {
+      const opt = document.createElement('option');
+      opt.value = relType.type;
+      opt.textContent = relType.type;
+      typeSelect.appendChild(opt);
     });
   }
 
@@ -203,8 +252,9 @@ class Sidebar {
     const styles = renderer.buildStyles();
     renderer.cy.style(styles);
 
-    // Repopulate group filters
+    // Repopulate group filters and relationship form
     this.populateGroupFilters();
+    this.populateRelationshipForm();
 
     // Run layout
     renderer.runLayout();
@@ -231,17 +281,29 @@ class Sidebar {
 
     // Get connected nodes and relationships
     const connectedEdges = node.connectedEdges();
-    let relationshipText = '';
+    relationshipsEl.innerHTML = '';
+
     if (connectedEdges.length > 0) {
-      const relationships = connectedEdges.map(edge => {
+      connectedEdges.forEach(edge => {
         const otherNode = edge.source().id() === node.id() ? edge.target() : edge.source();
-        return `${edge.data('label')} → ${otherNode.data('label')}`;
-      }).join('<br>');
-      relationshipText = relationships;
+        const relationshipDiv = document.createElement('div');
+        relationshipDiv.className = 'relationship-item';
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = `${edge.data('label')} → ${otherNode.data('label')}`;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-rel-btn';
+        deleteBtn.textContent = '✕';
+        deleteBtn.addEventListener('click', () => this.deleteRelationship(edge.id(), node));
+
+        relationshipDiv.appendChild(textSpan);
+        relationshipDiv.appendChild(deleteBtn);
+        relationshipsEl.appendChild(relationshipDiv);
+      });
     } else {
-      relationshipText = '(No relationships)';
+      relationshipsEl.innerHTML = '<p style="color: #999; font-size: 12px;">(No relationships)</p>';
     }
-    relationshipsEl.innerHTML = relationshipText;
 
     panel.style.display = 'block';
   }
@@ -274,5 +336,103 @@ class Sidebar {
       banner.style.borderColor = '#f5c6cb';
       banner.style.color = '#721c24';
     }, 5000);
+  }
+
+  /**
+   * Add a new relationship from the form
+   */
+  addRelationship() {
+    const source = document.getElementById('relSourceSelect').value;
+    const target = document.getElementById('relTargetSelect').value;
+    const type = document.getElementById('relTypeSelect').value;
+    const label = document.getElementById('relLabelInput').value.trim();
+
+    // Validate inputs
+    if (!source || !target || !type) {
+      this.showError('Please select source, target, and type');
+      return;
+    }
+
+    if (source === target) {
+      this.showError('Source and target must be different');
+      return;
+    }
+
+    // Add edge to Cytoscape
+    const edgeData = {
+      source,
+      target,
+      relationType: type,
+      label: label || type
+    };
+    this.renderer.cy.add({ data: edgeData });
+
+    // Add to data
+    const newRelationship = {
+      source,
+      target,
+      type,
+      label: label || undefined
+    };
+    if (!label) delete newRelationship.label;
+    this.data.relationships.push(newRelationship);
+    dataLoader.data.relationships.push(newRelationship);
+
+    // Clear form
+    document.getElementById('relLabelInput').value = '';
+
+    // Re-run layout
+    this.renderer.runLayout();
+
+    this.showSuccess(`Added relationship: ${type}`);
+  }
+
+  /**
+   * Delete a relationship
+   */
+  deleteRelationship(edgeId, node) {
+    const edge = this.renderer.cy.getElementById(edgeId);
+    if (!edge.nonempty()) {
+      this.showError('Edge not found');
+      return;
+    }
+
+    const source = edge.data('source');
+    const target = edge.data('target');
+    const type = edge.data('relationType');
+
+    // Remove from Cytoscape
+    edge.remove();
+
+    // Remove from data
+    const idx = this.data.relationships.findIndex(rel =>
+      rel.source === source && rel.target === target && rel.type === type
+    );
+    if (idx >= 0) {
+      this.data.relationships.splice(idx, 1);
+      dataLoader.data.relationships.splice(idx, 1);
+    }
+
+    // Refresh node info panel
+    this.showNodeInfo(node);
+
+    this.showSuccess('Relationship deleted');
+  }
+
+  /**
+   * Download current data as JSON
+   */
+  downloadJSON() {
+    const json = JSON.stringify(dataLoader.data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'relationships.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    this.showSuccess('JSON downloaded');
   }
 }

@@ -21,20 +21,21 @@ class ChartRenderer {
       elements: this.elements,
       style: styles,
       layout: {
-        name: 'preset' // Start with no layout, we'll run COSE separately
+        name: 'preset' // Start with preset, we'll apply dynamic layout below
       },
-      wheelSensitivity: 0.1,
       pixelRatio: 1
+      // wheelSensitivity: use default (1.0) to avoid warning about non-standard hardware config
     });
 
-    // Run initial layout (COSE-Bilkent is auto-registered from CDN)
-    this.runLayout();
-
-    // Add node click handler
+    // Add node click handler before running layout
     this.cy.on('tap', 'node', (evt) => {
       const node = evt.target;
       this.onNodeClick(node);
     });
+
+    // Run initial layout (COSE-Bilkent is auto-registered from CDN)
+    // Use a small delay to ensure Cytoscape is fully ready
+    setTimeout(() => this.runLayout(), 50);
 
     return this.cy;
   }
@@ -132,27 +133,70 @@ class ChartRenderer {
   }
 
   /**
-   * Run COSE layout
+   * Run COSE layout (with fallbacks)
    */
   runLayout(layoutConfig = null) {
     if (!this.cy) return;
 
     const config = layoutConfig || CONFIG.layout;
+    console.log(`Attempting layout: ${config.name}`, {
+      idealEdgeLength: config.idealEdgeLength,
+      nodeRepulsion: config.nodeRepulsion,
+      numIter: config.numIter
+    });
+
+    // Create COSE-compatible config (works for both cose and cose-bilkent)
+    const coseConfig = {
+      nodeRepulsion: config.nodeRepulsion,
+      idealEdgeLength: config.idealEdgeLength,
+      numIter: config.numIter,
+      coolingFactor: config.coolingFactor || 0.99,
+      minTemp: config.minTemp || 1.0,
+      animate: config.animate !== false,
+      animationDuration: config.animationDuration || 500
+    };
+
+    // Try primary layout
     try {
-      this.currentLayout = this.cy.layout({
-        ...config,
-        animate: true,
-        animationDuration: 500
-      }).run();
+      this.currentLayout = this.cy.layout({ ...coseConfig, name: config.name }).run();
+      console.log(`✓ Layout "${config.name}" applied successfully`);
+      return;
     } catch (error) {
-      // Fallback to circle layout if cose-bilkent isn't available
-      console.warn(`Layout "${config.name}" not available, falling back to circle layout:`, error.message);
+      console.warn(`Layout "${config.name}" unavailable:`, error.message);
+    }
+
+    // Fallback 1: standard COSE
+    try {
+      console.log('Trying standard COSE layout...');
+      this.currentLayout = this.cy.layout({ ...coseConfig, name: 'cose' }).run();
+      console.log('✓ COSE layout applied');
+      return;
+    } catch (cosError) {
+      console.warn('COSE layout also failed:', cosError.message);
+    }
+
+    // Fallback 2: grid (better than circle for large graphs)
+    try {
+      console.log('Trying grid layout...');
       this.currentLayout = this.cy.layout({
-        name: 'circle',
+        name: 'grid',
         animate: true,
         animationDuration: 500
       }).run();
+      console.log('✓ Grid layout applied as fallback');
+      return;
+    } catch (gridError) {
+      console.warn('Grid layout failed:', gridError.message);
     }
+
+    // Final fallback: circle
+    console.log('Applying final circle layout fallback');
+    this.currentLayout = this.cy.layout({
+      name: 'circle',
+      animate: true,
+      animationDuration: 500
+    }).run();
+    console.log('✓ Circle layout applied as final fallback');
   }
 
   /**
