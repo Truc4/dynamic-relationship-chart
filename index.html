@@ -64,12 +64,33 @@
 
             <!-- Edit Relationships -->
             <div class="section">
-                <h3>Edit Relationships</h3>
-                <label>From: <select id="relSourceSelect"></select></label>
-                <label>To: <select id="relTargetSelect"></select></label>
-                <label>Type: <select id="relTypeSelect"></select></label>
-                <input type="text" id="relLabelInput" placeholder="Label (optional)">
-                <button id="addRelationshipBtn">Add Relationship</button>
+                <h3>Relationships</h3>
+                <p class="hint">Click 2 nodes to create a relationship<br>Click an edge to edit it</p>
+
+                <!-- Node Selection -->
+                <div id="nodeSelectionPanel" style="display: none;">
+                    <h4>Selected Nodes</h4>
+                    <div id="selectedNodesDisplay" style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px;"></div>
+                    <div id="relTypeSelectionPanel" style="display: none; margin-top: 10px;">
+                        <label>Relationship Type:</label>
+                        <select id="newRelTypeSelect"></select>
+                        <input type="text" id="newRelLabelInput" placeholder="Label (optional)">
+                        <button id="createRelationshipBtn">Create</button>
+                        <button id="cancelSelectionBtn">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Edge Editing -->
+                <div id="edgeEditPanel" style="display: none;">
+                    <h4>Edit Edge</h4>
+                    <div id="edgeInfoDisplay" style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px;"></div>
+                    <label>Type:</label>
+                    <select id="editEdgeTypeSelect"></select>
+                    <input type="text" id="editEdgeLabelInput" placeholder="Label (optional)">
+                    <button id="saveEdgeBtn">Save</button>
+                    <button id="deleteEdgeBtn" style="background-color: #e74c3c;">Delete</button>
+                    <button id="closeEdgeEditBtn">Close</button>
+                </div>
             </div>
 
             <!-- Layout Controls -->

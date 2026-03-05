@@ -501,12 +501,48 @@
       "bio": ""
     }
   ],
-  "relationships": [],
+  "relationships": [
+    {
+      "source": "84787008056066048",
+      "target": "110476777545023488",
+      "type": "Cousins"
+    },
+    {
+      "source": "164547838204706816",
+      "target": "170640465794695168",
+      "type": "Siblings"
+    },
+    {
+      "source": "174279123240353792",
+      "target": "174659809595883520",
+      "type": "Friends"
+    },
+    {
+      "source": "191654741833547776",
+      "target": "228717813810987009",
+      "type": "Dating"
+    },
+    {
+      "source": "252301004274401290",
+      "target": "254994863676850176",
+      "type": "Married"
+    },
+    {
+      "source": "257018797888634881",
+      "target": "262159119727722496",
+      "type": "Subordinate"
+    },
+    {
+      "source": "270099938824814595",
+      "target": "275474633757556737",
+      "type": "Coworker"
+    }
+  ],
   "relationshipTypes": [
     {
-      "type": "Married",
-      "color": "#e74c3c",
-      "width": 3
+      "type": "Cousins",
+      "color": "#9b59b6",
+      "width": 2
     },
     {
       "type": "Siblings",
@@ -514,18 +550,28 @@
       "width": 2
     },
     {
-      "type": "Cousins",
-      "color": "#9b59b6",
+      "type": "Friends",
+      "color": "#f39c12",
+      "width": 1
+    },
+    {
+      "type": "Dating",
+      "color": "#e91e63",
       "width": 2
     },
     {
-      "type": "ParentChild",
+      "type": "Married",
+      "color": "#e74c3c",
+      "width": 3
+    },
+    {
+      "type": "Subordinate",
       "color": "#2ecc71",
       "width": 2
     },
     {
-      "type": "Friends",
-      "color": "#f39c12",
+      "type": "Coworker",
+      "color": "#00bcd4",
       "width": 1
     }
   ],

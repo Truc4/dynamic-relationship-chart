@@ -7,6 +7,8 @@ class Sidebar {
     this.currentSearchTerm = '';
     this.selectedGroups = new Set();
     this.edgeLabelsVisible = true;
+    this.selectedNodes = []; // Track selected nodes for creating relationships
+    this.currentEditingEdge = null; // Track edge being edited
   }
 
   /**
@@ -52,12 +54,11 @@ class Sidebar {
     const downloadJsonBtn = document.getElementById('downloadJsonBtn');
     downloadJsonBtn.addEventListener('click', () => this.downloadJSON());
 
-    // Add relationship
-    const addRelationshipBtn = document.getElementById('addRelationshipBtn');
-    addRelationshipBtn.addEventListener('click', () => this.addRelationship());
-
     // Set node click handler
-    this.renderer.onNodeClick = (node) => this.showNodeInfo(node);
+    this.renderer.onNodeClick = (node) => this.handleNodeClick(node);
+
+    // Set edge click handler
+    this.renderer.onEdgeClick = (edge) => this.handleEdgeClick(edge);
   }
 
   /**
@@ -84,41 +85,29 @@ class Sidebar {
   }
 
   /**
-   * Populate relationship form dropdowns
+   * Populate relationship form dropdowns (for edge editing)
    */
   populateRelationshipForm() {
-    const sourceSelect = document.getElementById('relSourceSelect');
-    const targetSelect = document.getElementById('relTargetSelect');
-    const typeSelect = document.getElementById('relTypeSelect');
+    const newRelTypeSelect = document.getElementById('newRelTypeSelect');
+    const editEdgeTypeSelect = document.getElementById('editEdgeTypeSelect');
 
-    // Clear existing options
-    sourceSelect.innerHTML = '<option value="">-- Select source --</option>';
-    targetSelect.innerHTML = '<option value="">-- Select target --</option>';
-    typeSelect.innerHTML = '<option value="">-- Select type --</option>';
-
-    // Sort people by name
-    const sortedPeople = [...this.data.people].sort((a, b) => a.name.localeCompare(b.name));
-
-    // Populate source and target with people
-    sortedPeople.forEach(person => {
-      const sourceOpt = document.createElement('option');
-      sourceOpt.value = person.id;
-      sourceOpt.textContent = person.name;
-      sourceSelect.appendChild(sourceOpt);
-
-      const targetOpt = document.createElement('option');
-      targetOpt.value = person.id;
-      targetOpt.textContent = person.name;
-      targetSelect.appendChild(targetOpt);
+    // Clear and populate type dropdowns
+    [newRelTypeSelect, editEdgeTypeSelect].forEach(select => {
+      select.innerHTML = '<option value="">-- Select type --</option>';
+      this.data.relationshipTypes.forEach(relType => {
+        const opt = document.createElement('option');
+        opt.value = relType.type;
+        opt.textContent = relType.type;
+        select.appendChild(opt);
+      });
     });
 
-    // Populate type dropdown
-    this.data.relationshipTypes.forEach(relType => {
-      const opt = document.createElement('option');
-      opt.value = relType.type;
-      opt.textContent = relType.type;
-      typeSelect.appendChild(opt);
-    });
+    // Setup event listeners
+    document.getElementById('createRelationshipBtn').addEventListener('click', () => this.createRelationship());
+    document.getElementById('cancelSelectionBtn').addEventListener('click', () => this.clearNodeSelection());
+    document.getElementById('saveEdgeBtn').addEventListener('click', () => this.saveEdgeEdit());
+    document.getElementById('deleteEdgeBtn').addEventListener('click', () => this.deleteEdgeFromEdit());
+    document.getElementById('closeEdgeEditBtn').addEventListener('click', () => this.closeEdgeEdit());
   }
 
   /**
@@ -262,6 +251,78 @@ class Sidebar {
   }
 
   /**
+   * Handle node click - for selecting nodes to create relationships
+   */
+  handleNodeClick(node) {
+    const nodeId = node.id();
+    const nodeIndex = this.selectedNodes.findIndex(n => n.id() === nodeId);
+
+    if (nodeIndex >= 0) {
+      // Deselect if already selected
+      this.selectedNodes.splice(nodeIndex, 1);
+      node.unselect();
+    } else {
+      // Select node (allow max 2)
+      if (this.selectedNodes.length < 2) {
+        this.selectedNodes.push(node);
+        node.select();
+      } else {
+        // Replace the oldest selection
+        this.selectedNodes[0].unselect();
+        this.selectedNodes[0] = node;
+        node.select();
+      }
+    }
+
+    this.updateNodeSelectionDisplay();
+    this.showNodeInfo(node);
+  }
+
+  /**
+   * Handle edge click - for editing relationships
+   */
+  handleEdgeClick(edge) {
+    this.currentEditingEdge = edge;
+    this.showEdgeEdit(edge);
+  }
+
+  /**
+   * Update the node selection display
+   */
+  updateNodeSelectionDisplay() {
+    const panel = document.getElementById('nodeSelectionPanel');
+    const display = document.getElementById('selectedNodesDisplay');
+    const relTypePanel = document.getElementById('relTypeSelectionPanel');
+
+    if (this.selectedNodes.length === 0) {
+      panel.style.display = 'none';
+      return;
+    }
+
+    panel.style.display = 'block';
+
+    const nodeNames = this.selectedNodes.map(n => n.data('label')).join(' → ');
+    display.textContent = nodeNames;
+
+    if (this.selectedNodes.length === 2) {
+      relTypePanel.style.display = 'block';
+    } else {
+      relTypePanel.style.display = 'none';
+    }
+  }
+
+  /**
+   * Clear node selection
+   */
+  clearNodeSelection() {
+    this.selectedNodes.forEach(n => n.unselect());
+    this.selectedNodes = [];
+    document.getElementById('nodeSelectionPanel').style.display = 'none';
+    document.getElementById('newRelLabelInput').value = '';
+    document.getElementById('newRelTypeSelect').value = '';
+  }
+
+  /**
    * Show node information panel
    */
   showNodeInfo(node) {
@@ -292,13 +353,14 @@ class Sidebar {
         const textSpan = document.createElement('span');
         textSpan.textContent = `${edge.data('label')} → ${otherNode.data('label')}`;
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-rel-btn';
-        deleteBtn.textContent = '✕';
-        deleteBtn.addEventListener('click', () => this.deleteRelationship(edge.id(), node));
+        const editBtn = document.createElement('button');
+        editBtn.className = 'delete-rel-btn';
+        editBtn.textContent = '✎';
+        editBtn.title = 'Edit relationship';
+        editBtn.addEventListener('click', () => this.handleEdgeClick(edge));
 
         relationshipDiv.appendChild(textSpan);
-        relationshipDiv.appendChild(deleteBtn);
+        relationshipDiv.appendChild(editBtn);
         relationshipsEl.appendChild(relationshipDiv);
       });
     } else {
@@ -339,24 +401,24 @@ class Sidebar {
   }
 
   /**
-   * Add a new relationship from the form
+   * Create a new relationship from selected nodes
    */
-  addRelationship() {
-    const source = document.getElementById('relSourceSelect').value;
-    const target = document.getElementById('relTargetSelect').value;
-    const type = document.getElementById('relTypeSelect').value;
-    const label = document.getElementById('relLabelInput').value.trim();
-
-    // Validate inputs
-    if (!source || !target || !type) {
-      this.showError('Please select source, target, and type');
+  createRelationship() {
+    if (this.selectedNodes.length !== 2) {
+      this.showError('Please select exactly 2 nodes');
       return;
     }
 
-    if (source === target) {
-      this.showError('Source and target must be different');
+    const type = document.getElementById('newRelTypeSelect').value;
+    const label = document.getElementById('newRelLabelInput').value.trim();
+
+    if (!type) {
+      this.showError('Please select a relationship type');
       return;
     }
+
+    const source = this.selectedNodes[0].id();
+    const target = this.selectedNodes[1].id();
 
     // Add edge to Cytoscape
     const edgeData = {
@@ -378,8 +440,8 @@ class Sidebar {
     this.data.relationships.push(newRelationship);
     dataLoader.data.relationships.push(newRelationship);
 
-    // Clear form
-    document.getElementById('relLabelInput').value = '';
+    // Clear selection
+    this.clearNodeSelection();
 
     // Re-run layout
     this.renderer.runLayout();
@@ -388,15 +450,83 @@ class Sidebar {
   }
 
   /**
-   * Delete a relationship
+   * Show edge edit panel
    */
-  deleteRelationship(edgeId, node) {
-    const edge = this.renderer.cy.getElementById(edgeId);
-    if (!edge.nonempty()) {
-      this.showError('Edge not found');
+  showEdgeEdit(edge) {
+    const panel = document.getElementById('edgeEditPanel');
+    const infoDisplay = document.getElementById('edgeInfoDisplay');
+    const typeSelect = document.getElementById('editEdgeTypeSelect');
+    const labelInput = document.getElementById('editEdgeLabelInput');
+
+    const source = edge.source().data('label');
+    const target = edge.target().data('label');
+    const currentType = edge.data('relationType');
+    const currentLabel = edge.data('label');
+
+    infoDisplay.textContent = `${source} → ${target}`;
+    typeSelect.value = currentType;
+    labelInput.value = currentLabel && currentLabel !== currentType ? currentLabel : '';
+
+    // Hide other panels
+    document.getElementById('nodeSelectionPanel').style.display = 'none';
+
+    panel.style.display = 'block';
+  }
+
+  /**
+   * Close edge edit panel
+   */
+  closeEdgeEdit() {
+    document.getElementById('edgeEditPanel').style.display = 'none';
+    this.currentEditingEdge = null;
+  }
+
+  /**
+   * Save edge edit
+   */
+  saveEdgeEdit() {
+    if (!this.currentEditingEdge) return;
+
+    const type = document.getElementById('editEdgeTypeSelect').value;
+    const label = document.getElementById('editEdgeLabelInput').value.trim();
+
+    if (!type) {
+      this.showError('Please select a type');
       return;
     }
 
+    const edge = this.currentEditingEdge;
+    const oldType = edge.data('relationType');
+    const source = edge.data('source');
+    const target = edge.data('target');
+
+    // Update edge data
+    edge.data('relationType', type);
+    edge.data('label', label || type);
+
+    // Update in data array
+    const idx = this.data.relationships.findIndex(rel =>
+      rel.source === source && rel.target === target && rel.type === oldType
+    );
+    if (idx >= 0) {
+      this.data.relationships[idx].type = type;
+      this.data.relationships[idx].label = label || undefined;
+      if (!label) delete this.data.relationships[idx].label;
+      dataLoader.data.relationships[idx] = this.data.relationships[idx];
+    }
+
+    this.closeEdgeEdit();
+    this.renderer.runLayout();
+    this.showSuccess('Relationship updated');
+  }
+
+  /**
+   * Delete edge from edit panel
+   */
+  deleteEdgeFromEdit() {
+    if (!this.currentEditingEdge) return;
+
+    const edge = this.currentEditingEdge;
     const source = edge.data('source');
     const target = edge.data('target');
     const type = edge.data('relationType');
@@ -413,9 +543,7 @@ class Sidebar {
       dataLoader.data.relationships.splice(idx, 1);
     }
 
-    // Refresh node info panel
-    this.showNodeInfo(node);
-
+    this.closeEdgeEdit();
     this.showSuccess('Relationship deleted');
   }
 

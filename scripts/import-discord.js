@@ -133,11 +133,13 @@ function mergeWithExisting(people, dataFile, guildName) {
       people,
       relationships: [],
       relationshipTypes: [
-        { type: 'Married', color: '#e74c3c', width: 3 },
-        { type: 'Siblings', color: '#3498db', width: 2 },
         { type: 'Cousins', color: '#9b59b6', width: 2 },
-        { type: 'ParentChild', color: '#2ecc71', width: 2 },
-        { type: 'Friends', color: '#f39c12', width: 1 }
+        { type: 'Siblings', color: '#3498db', width: 2 },
+        { type: 'Friends', color: '#f39c12', width: 1 },
+        { type: 'Dating', color: '#e91e63', width: 2 },
+        { type: 'Married', color: '#e74c3c', width: 3 },
+        { type: 'Subordinate', color: '#2ecc71', width: 2 },
+        { type: 'Coworker', color: '#00bcd4', width: 1 }
       ],
       groups: [
         { id: 'discord', label: 'Discord', nodeColor: '#dae8fc' }

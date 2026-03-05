@@ -33,6 +33,12 @@ class ChartRenderer {
       this.onNodeClick(node);
     });
 
+    // Add edge click handler
+    this.cy.on('tap', 'edge', (evt) => {
+      const edge = evt.target;
+      this.onEdgeClick(edge);
+    });
+
     // Run initial layout (COSE-Bilkent is auto-registered from CDN)
     // Use a small delay to ensure Cytoscape is fully ready
     setTimeout(() => this.runLayout(), 50);
@@ -295,6 +301,13 @@ class ChartRenderer {
    * Node click callback - to be overridden
    */
   onNodeClick(node) {
+    // Implemented by sidebar.js
+  }
+
+  /**
+   * Edge click callback - to be overridden
+   */
+  onEdgeClick(edge) {
     // Implemented by sidebar.js
   }
 }
