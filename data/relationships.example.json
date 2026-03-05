@@ -1,0 +1,176 @@
+{
+  "metadata": {
+    "title": "Smith Family Network"
+  },
+  "people": [
+    {
+      "id": "alice",
+      "name": "Alice Smith",
+      "image": "",
+      "group": "family",
+      "bio": "Family matriarch, retired teacher"
+    },
+    {
+      "id": "bob",
+      "name": "Bob Smith",
+      "image": "",
+      "group": "family",
+      "bio": "Alice's spouse, engineer"
+    },
+    {
+      "id": "carol",
+      "name": "Carol Smith",
+      "image": "",
+      "group": "family",
+      "bio": "Alice and Bob's daughter"
+    },
+    {
+      "id": "david",
+      "name": "David Chen",
+      "image": "",
+      "group": "family",
+      "bio": "Carol's spouse, doctor"
+    },
+    {
+      "id": "emma",
+      "name": "Emma Smith",
+      "image": "",
+      "group": "family",
+      "bio": "Alice and Bob's granddaughter"
+    },
+    {
+      "id": "frank",
+      "name": "Frank Johnson",
+      "image": "",
+      "group": "friends",
+      "bio": "Alice's childhood friend"
+    },
+    {
+      "id": "grace",
+      "name": "Grace Lee",
+      "image": "",
+      "group": "friends",
+      "bio": "Carol's work colleague and friend"
+    },
+    {
+      "id": "henry",
+      "name": "Henry Martinez",
+      "image": "",
+      "group": "friends",
+      "bio": "Bob's college roommate"
+    },
+    {
+      "id": "iris",
+      "name": "Iris Williams",
+      "image": "",
+      "group": "extended",
+      "bio": "Bob's cousin"
+    }
+  ],
+  "relationships": [
+    {
+      "source": "alice",
+      "target": "bob",
+      "type": "Married",
+      "label": "Married 1985"
+    },
+    {
+      "source": "alice",
+      "target": "carol",
+      "type": "ParentChild",
+      "label": "Mother"
+    },
+    {
+      "source": "bob",
+      "target": "carol",
+      "type": "ParentChild",
+      "label": "Father"
+    },
+    {
+      "source": "carol",
+      "target": "david",
+      "type": "Married",
+      "label": "Married 2012"
+    },
+    {
+      "source": "carol",
+      "target": "emma",
+      "type": "ParentChild",
+      "label": "Mother"
+    },
+    {
+      "source": "david",
+      "target": "emma",
+      "type": "ParentChild",
+      "label": "Father"
+    },
+    {
+      "source": "alice",
+      "target": "frank",
+      "type": "Friends",
+      "label": "Since 1965"
+    },
+    {
+      "source": "carol",
+      "target": "grace",
+      "type": "Friends",
+      "label": "Work friends"
+    },
+    {
+      "source": "bob",
+      "target": "henry",
+      "type": "Friends",
+      "label": "College roommates"
+    },
+    {
+      "source": "bob",
+      "target": "iris",
+      "type": "Cousins",
+      "label": "First cousins"
+    }
+  ],
+  "relationshipTypes": [
+    {
+      "type": "Married",
+      "color": "#e74c3c",
+      "width": 3
+    },
+    {
+      "type": "Siblings",
+      "color": "#3498db",
+      "width": 2
+    },
+    {
+      "type": "Cousins",
+      "color": "#9b59b6",
+      "width": 2
+    },
+    {
+      "type": "ParentChild",
+      "color": "#2ecc71",
+      "width": 2
+    },
+    {
+      "type": "Friends",
+      "color": "#f39c12",
+      "width": 1
+    }
+  ],
+  "groups": [
+    {
+      "id": "family",
+      "label": "Family",
+      "nodeColor": "#d5e8d4"
+    },
+    {
+      "id": "friends",
+      "label": "Friends",
+      "nodeColor": "#dae8fc"
+    },
+    {
+      "id": "extended",
+      "label": "Extended",
+      "nodeColor": "#fce4d6"
+    }
+  ]
+}

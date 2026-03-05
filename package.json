@@ -1,0 +1,21 @@
+{
+  "name": "dynamic-relationship-chart",
+  "version": "1.0.0",
+  "description": "Interactive relationship chart web app",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "import-discord": "node scripts/import-discord.js"
+  },
+  "keywords": [
+    "relationship",
+    "chart",
+    "graph",
+    "discord"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "dotenv": "^16.0.0"
+  }
+}
