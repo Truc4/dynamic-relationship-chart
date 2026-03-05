@@ -88,8 +88,9 @@ class DataLoader {
     });
 
     // Add edges
-    data.relationships.forEach(rel => {
+    data.relationships.forEach((rel, idx) => {
       const edgeData = {
+        id: `${rel.source}|${rel.target}|${rel.type}`,
         source: rel.source,
         target: rel.target,
         relationType: rel.type,

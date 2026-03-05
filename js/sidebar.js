@@ -420,14 +420,14 @@ class Sidebar {
     const source = this.selectedNodes[0].id();
     const target = this.selectedNodes[1].id();
 
-    // Add edge to Cytoscape
-    const edgeData = {
-      source,
-      target,
-      relationType: type,
-      label: label || type
-    };
-    this.renderer.cy.add({ data: edgeData });
+    // Check if relationship already exists
+    const exists = dataLoader.data.relationships.some(rel =>
+      rel.source === source && rel.target === target && rel.type === type
+    );
+    if (exists) {
+      this.showError('This relationship already exists');
+      return;
+    }
 
     // Add to data
     const newRelationship = {
@@ -437,14 +437,26 @@ class Sidebar {
       label: label || undefined
     };
     if (!label) delete newRelationship.label;
-    this.data.relationships.push(newRelationship);
     dataLoader.data.relationships.push(newRelationship);
+
+    // Generate edge ID (consistent with dataLoader format)
+    const edgeId = `${source}|${target}|${type}`;
+
+    // Add edge to Cytoscape
+    const edgeData = {
+      id: edgeId,
+      source,
+      target,
+      relationType: type,
+      label: label || type
+    };
+    this.renderer.cy.add({ data: edgeData });
 
     // Clear selection
     this.clearNodeSelection();
 
-    // Re-run layout
-    this.renderer.runLayout();
+    // Re-run layout with a short delay to let Cytoscape process the new edge
+    setTimeout(() => this.renderer.runLayout(), 50);
 
     this.showSuccess(`Added relationship: ${type}`);
   }
@@ -505,18 +517,17 @@ class Sidebar {
     edge.data('label', label || type);
 
     // Update in data array
-    const idx = this.data.relationships.findIndex(rel =>
+    const idx = dataLoader.data.relationships.findIndex(rel =>
       rel.source === source && rel.target === target && rel.type === oldType
     );
     if (idx >= 0) {
-      this.data.relationships[idx].type = type;
-      this.data.relationships[idx].label = label || undefined;
-      if (!label) delete this.data.relationships[idx].label;
-      dataLoader.data.relationships[idx] = this.data.relationships[idx];
+      dataLoader.data.relationships[idx].type = type;
+      dataLoader.data.relationships[idx].label = label || undefined;
+      if (!label) delete dataLoader.data.relationships[idx].label;
     }
 
     this.closeEdgeEdit();
-    this.renderer.runLayout();
+    setTimeout(() => this.renderer.runLayout(), 50);
     this.showSuccess('Relationship updated');
   }
 
@@ -535,15 +546,15 @@ class Sidebar {
     edge.remove();
 
     // Remove from data
-    const idx = this.data.relationships.findIndex(rel =>
+    const idx = dataLoader.data.relationships.findIndex(rel =>
       rel.source === source && rel.target === target && rel.type === type
     );
     if (idx >= 0) {
-      this.data.relationships.splice(idx, 1);
       dataLoader.data.relationships.splice(idx, 1);
     }
 
     this.closeEdgeEdit();
+    setTimeout(() => this.renderer.runLayout(), 50);
     this.showSuccess('Relationship deleted');
   }
 

@@ -144,11 +144,21 @@ class ChartRenderer {
   runLayout(layoutConfig = null) {
     if (!this.cy) return;
 
+    // Stop any currently running layout
+    if (this.currentLayout) {
+      try {
+        this.currentLayout.stop();
+      } catch (e) {
+        // Layout might already be stopped
+      }
+    }
+
     const config = layoutConfig || CONFIG.layout;
     console.log(`Attempting layout: ${config.name}`, {
       idealEdgeLength: config.idealEdgeLength,
       nodeRepulsion: config.nodeRepulsion,
-      numIter: config.numIter
+      numIter: config.numIter,
+      animate: config.animate
     });
 
     // Create COSE-compatible config (works for both cose and cose-bilkent)
@@ -156,10 +166,14 @@ class ChartRenderer {
       nodeRepulsion: config.nodeRepulsion,
       idealEdgeLength: config.idealEdgeLength,
       numIter: config.numIter,
+      componentSpacing: config.componentSpacing,
+      gravity: config.gravity,
+      gravityRange: config.gravityRange,
       coolingFactor: config.coolingFactor || 0.99,
       minTemp: config.minTemp || 1.0,
-      animate: config.animate !== false,
-      animationDuration: config.animationDuration || 500
+      animate: config.animate === false ? false : true,
+      animationDuration: config.animationDuration || 1000,
+      animationEasing: config.animationEasing || 'ease-out'
     };
 
     // Try primary layout

@@ -1,17 +1,18 @@
 // Configuration and constants
 
 const CONFIG = {
-  // Layout defaults - try COSE-Bilkent first, falls back to COSE
+  // Layout defaults - use standard COSE (COSE-Bilkent unavailable from CDN)
   layout: {
-    name: 'cose-bilkent',
-    idealEdgeLength: 100,
-    nodeRepulsion: 250000,
-    componentSpacing: 30,
-    gravity: 0,
-    gravityRange: 100,
-    numIter: 3000,
+    name: 'cose',
+    idealEdgeLength: 150,
+    nodeRepulsion: 350000,
+    componentSpacing: 40,
+    gravity: 0.1,
+    gravityRange: 300,
+    numIter: 1500,
     animate: true,
-    animationDuration: 500,
+    animationDuration: 1200,
+    animationEasing: 'ease-out',
     // COSE-specific params (used as fallback too)
     coolingFactor: 0.99,
     minTemp: 1.0
