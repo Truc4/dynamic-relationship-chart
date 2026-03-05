@@ -16,3 +16,7 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Data files (keep example only)
+data/*
+!data/relationships.example.json
